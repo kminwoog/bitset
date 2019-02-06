@@ -27,17 +27,20 @@ defmodule Bitset do
     at(bitset, pos) |> elem(2) == @set_bit
   end
 
+  @spec all?(bitstring() | Bitset.t()) :: boolean()
   def all?(bitset = %Bitset{}), do: all?(bitset.data)
   def all?(<<1::1>>), do: true
   def all?(<<0::1>>), do: false
   def all?(<<1::1, rest::bits>>), do: all?(rest)
   def all?(<<0::1, _rest::bits>>), do: false
 
+  @spec any?(bitstring() | Bitset.t()) :: boolean()
   def any?(bitset = %Bitset{}), do: any?(bitset.data)
   def any?(<<>>), do: false
   def any?(<<1::1, _rest::bits>>), do: true
   def any?(<<0::1, rest::bits>>), do: any?(rest)
 
+  @spec none?(bitstring() | Bitset.t()) :: boolean()
   def none?(bitset = %Bitset{}), do: none?(bitset.data)
   def none?(<<>>), do: true
   def none?(<<1::1, _rest::bits>>), do: false
@@ -88,6 +91,7 @@ defmodule Bitset do
     )
   end
 
+  @spec reverse(Bitset.t()) :: bitstring()
   def reverse(bitset = %Bitset{}), do: reverse_bit(bitset.data, <<>>)
 
   @doc "return string representation of the bitset"
@@ -96,28 +100,14 @@ defmodule Bitset do
     to_string(bitset.data, <<>>)
   end
 
-  def to_string2(bitset = %Bitset{}) do
-    to_string2(bitset.data, <<>>)
-  end
-
-  defp to_string(<<>>, acc), do: String.reverse(acc)
+  defp to_string(<<>>, acc), do: acc
 
   defp to_string(<<1::1, rest::bits>>, acc) do
-    to_string(rest, "1" <> acc)
+    to_string(rest, acc <> "1")
   end
 
   defp to_string(<<0::1, rest::bits>>, acc) do
-    to_string(rest, "0" <> acc)
-  end
-
-  defp to_string2(<<>>, acc), do: acc
-
-  defp to_string2(<<1::1, rest::bits>>, acc) do
-    to_string2(rest, acc <> "1")
-  end
-
-  defp to_string2(<<0::1, rest::bits>>, acc) do
-    to_string2(rest, acc <> "0")
+    to_string(rest, acc <> "0")
   end
 
   defp offset(bitset, pos) do
