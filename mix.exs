@@ -11,7 +11,13 @@ defmodule Bitset.MixProject do
       package: package(),
       deps: deps(),
       name: "bitset",
-      source_url: "https://github.com/kminwoog/bitset"
+      source_url: "https://github.com/kminwoog/bitset",
+      homepage_url: "http://kminwoog.com",
+      docs: [
+        # The main page in the docs
+        main: "bitset",
+        extras: ["README.md"]
+      ]
     ]
   end
 
