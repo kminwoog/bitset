@@ -22,9 +22,19 @@ defmodule Bitset do
     %Bitset{size: size, data: data}
   end
 
+  @spec size(Bitset.t()) :: integer()
+  def size(bitset = %Bitset{}) do
+    bitset.size
+  end
+
+  @spec size(bitstring()) :: integer()
+  def size(<<data::bits>>) do
+    bit_size(data)
+  end
+
   @spec test?(Bitset.t(), integer()) :: boolean()
   def test?(bitset = %Bitset{}, pos) do
-    at(bitset, pos) |> elem(2) == @set_bit
+    at(bitset.data, pos) |> elem(2) == @set_bit
   end
 
   @spec all?(bitstring() | Bitset.t()) :: boolean()
@@ -47,105 +57,124 @@ defmodule Bitset do
   def none?(<<0::1, rest::bits>>), do: none?(rest)
 
   @doc "the number of bits set to true"
+  @spec count(Bitset.t()) :: integer
   def count(bitset = %Bitset{}) do
     for(<<bit::1 <- bitset.data>>, do: bit) |> Enum.sum()
   end
 
   @doc "sets all bits to true"
+  @spec set(Bitset.t()) :: Bitset.t()
   def set(bitset = %Bitset{}) do
     size = bitset.size
-    value = :math.pow(2, size)
+    value = trunc(:math.pow(2, size)) - 1
     new(<<value::size(size)>>, size)
   end
 
-  @doc "sets the bit at the position to true"
-  def set(bitset = %Bitset{}, pos) do
-    set_bit(bitset, pos, @set_bit)
+  @doc "sets the bit at the position to bit value"
+  @spec set(Bitset.t(), integer, integer) :: Bitset.t()
+  def set(bitset = %Bitset{}, pos, bit \\ @set_bit) do
+    data = set_bit(bitset.data, pos, bit)
+    new(data, bitset.size)
   end
 
   @doc "sets all bits to false"
+  @spec reset(Bitset.t()) :: Bitset.t()
   def reset(bitset = %Bitset{}) do
     size = bitset.size
     new(<<@unset_bit::size(size)>>, size)
   end
 
   @doc "sets the bit at the position to false"
+  @spec reset(Bitset.t(), integer) :: Bitset.t()
   def reset(bitset = %Bitset{}, pos) do
-    set_bit(bitset, pos, @unset_bit)
+    data = set_bit(bitset.data, pos, @unset_bit)
+    new(data, bitset.size)
   end
 
   @doc "toggle all bits"
+  @spec flip(Bitset.t()) :: Bitset.t()
   def flip(bitset = %Bitset{}) do
-    flip_bit(bitset.data, <<>>)
+    new(flip_bit(bitset.data, <<>>), bitset.size)
   end
 
   @doc "toggle the bit at the position"
+  @spec flip(Bitset.t(), integer) :: Bitset.t()
   def flip(bitset = %Bitset{}, pos) when is_integer(pos) do
-    {bytes, offset} = offset(bitset, pos)
-    <<prefix::size(bytes), padding::size(offset), val::1, rest::bits>> = bitset.data
-
-    new(
-      <<prefix::size(bytes), padding::size(offset), :erlang.band(val + 1, 1)::size(1),
-        rest::bits>>,
-      bitset.size
-    )
+    <<prefix::size(pos), val::1, rest::bits>> = bitset.data
+    new(<<prefix::size(pos), :erlang.band(val + 1, 1)::1, rest::bits>>, bitset.size)
   end
 
-  @spec reverse(Bitset.t()) :: bitstring()
-  def reverse(bitset = %Bitset{}), do: reverse_bit(bitset.data, <<>>)
+  @spec reverse(Bitset.t()) :: Bitset.t()
+  def reverse(bitset = %Bitset{}), do: new(reverse_bit(bitset.data, <<>>), bitset.size)
 
   @doc "return string representation of the bitset"
-  @spec to_string(Bitset.t()) :: bitstring()
-  def to_string(bitset = %Bitset{}) do
-    to_string(bitset.data, <<>>)
+  @spec to_string(bitstring() | Bitset.t(), bitstring()) :: binary()
+  def to_string(_, acc \\ <<>>)
+
+  def to_string(bitset = %Bitset{}, acc) do
+    to_string(bitset.data, acc)
   end
 
-  defp to_string(<<>>, acc), do: acc
+  def to_string(<<>>, acc), do: acc
 
-  defp to_string(<<1::1, rest::bits>>, acc) do
+  def to_string(<<1::1, rest::bits>>, acc) do
     to_string(rest, acc <> "1")
   end
 
-  defp to_string(<<0::1, rest::bits>>, acc) do
+  def to_string(<<0::1, rest::bits>>, acc) do
     to_string(rest, acc <> "0")
   end
 
-  defp offset(bitset, pos) do
-    bytes = trunc(pos / 8) * 8
-    offset = min(8, bitset.size - bytes) - rem(pos, 8) - 1
-    {bytes, offset}
+  @doc "return Bitset data binary"
+  @spec to_data(Bitset.t()) :: bitstring()
+  def to_data(bitset = %Bitset{}) do
+    bitset.data
   end
 
-  defp at(bitset, pos) do
-    {bytes, offset} = offset(bitset, pos)
-    <<prefix::size(bytes), padding::size(offset), bit::size(1), rest::bits>> = bitset.data
-    {prefix, padding, bit, rest}
+  @spec to_binary(Bitset.t()) :: bitstring()
+  def to_binary(bitset = %Bitset{}) do
+    reverse_byte(bitset.data, <<>>)
   end
 
-  defp set_bit(bitset, pos, bit) do
-    {bytes, offset} = offset(bitset, pos)
-    <<prefix::size(bytes), padding::size(offset), val::size(1), rest::bits>> = bitset.data
+  defp at(data, pos) do
+    <<prefix::size(pos), bit::size(1), rest::bits>> = data
+    {prefix, bit, rest}
+  end
+
+  defp set_bit(data, pos, bit) do
+    <<prefix::size(pos), val::size(1), rest::bits>> = data
 
     if val != bit do
-      new(<<prefix::size(bytes), padding::size(offset), bit::size(1), rest::bits>>, bitset.size)
+      <<prefix::size(pos), bit::size(1), rest::bits>>
     else
-      bitset
+      data
     end
   end
 
-  defp flip_bit(<<>>, acc), do: reverse(acc)
+  defp flip_bit(<<>>, acc), do: acc
 
   defp flip_bit(<<1::1, rest::bits>>, acc) do
-    flip(rest, <<0::1, acc::bits>>)
+    flip_bit(rest, <<acc::bits, 0::1>>)
   end
 
   defp flip_bit(<<0::1, rest::bits>>, acc) do
-    flip(rest, <<1::1, acc::bits>>)
+    flip_bit(rest, <<acc::bits, 1::1>>)
   end
 
   defp reverse_bit(<<>>, acc), do: acc
 
   defp reverse_bit(<<bit::1, rest::bits>>, acc) do
     reverse_bit(rest, <<bit::1, acc::bits>>)
+  end
+
+  defp reverse_byte(<<>>, acc), do: acc
+
+  defp reverse_byte(<<bit::8, rest::bits>>, acc) do
+    reverse_byte(rest, acc <> reverse_bit(<<bit::8>>, <<>>))
+  end
+
+  defp reverse_byte(<<rest::bits>>, acc) do
+    padding = 8 - bit_size(rest)
+    reverse_byte(<<rest::bits, 0::size(padding)>>, acc)
   end
 end

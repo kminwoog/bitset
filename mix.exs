@@ -4,7 +4,7 @@ defmodule Bitset.MixProject do
   def project do
     [
       app: :bitset,
-      version: "0.1.0",
+      version: "0.2.0",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       description: description(),
