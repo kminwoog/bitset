@@ -146,27 +146,27 @@ test "bitset - new" do
              "10110000110101000001000100001010101"
   end
 
-  test "bitset - to_binary" do
+  test "bitset - to_bytes" do
     # 10110000
     # -> 00001101
-    assert bit8() |> to_binary() |> to_string() == "00001101"
+    assert bit8() |> to_bytes() |> to_string() == "00001101"
 
     # 10110000 10
     # -> 00001101 00000001
-    assert bit10() |> to_binary() |> size() == 16
-    assert bit10() |> to_binary() |> to_string() == "0000110100000001"
+    assert bit10() |> to_bytes() |> size() == 16
+    assert bit10() |> to_bytes() |> to_string() == "0000110100000001"
 
     # 10110000 11010100 00010001 00001010
     # -> 00001101 00101011 10001000 01010000
     assert bit32()
-           |> to_binary()
+           |> to_bytes()
            |> to_string() ==
              "00001101001010111000100001010000"
 
     # 10110000 11010100 00010001 00001010 101
     # -> 00001101 00101011 10001000 01010000 00000101
     assert bit35()
-           |> to_binary()
+           |> to_bytes()
            |> to_string() ==
              "0000110100101011100010000101000000000101"
   end
