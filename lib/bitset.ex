@@ -131,8 +131,16 @@ defmodule Bitset do
     bitset.data
   end
 
+  @doc "convert to binary format"
+  @deprecated "Use to_bytes/1 instead"
   @spec to_binary(Bitset.t()) :: bitstring()
   def to_binary(bitset = %Bitset{}) do
+    reverse_byte(bitset.data, <<>>)
+  end
+
+  @doc since: "0.2.1"
+  @spec to_bytes(Bitset.t()) :: bitstring()
+  def to_bytes(bitset = %Bitset{}) do
     reverse_byte(bitset.data, <<>>)
   end
 

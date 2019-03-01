@@ -9,7 +9,7 @@ add in deps of `mix.exs`
 ```elixir
 def deps do
   [
-    {:bitset, "~> 0.2.0"}
+    {:bitset, "~> 0.2"}
   ]
 end
 ```
