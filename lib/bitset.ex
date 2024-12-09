@@ -34,7 +34,7 @@ defmodule Bitset do
 
   @spec test?(Bitset.t(), integer()) :: boolean()
   def test?(bitset = %Bitset{}, pos) do
-    at(bitset.data, pos) |> elem(2) == @set_bit
+    at(bitset.data, pos) |> elem(1) == @set_bit
   end
 
   @spec all?(bitstring() | Bitset.t()) :: boolean()

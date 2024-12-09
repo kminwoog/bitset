@@ -37,6 +37,13 @@ defmodule BitsetTest do
     assert new(10) |> none?()
   end
 
+  test "bitset - test?" do
+    assert new(10) |> set(1) |> test?(1)
+    assert new(10) |> set(3) |> test?(3)
+    assert new(10) |> set(9) |> test?(9)
+    assert not (new(10) |> set(1) |> test?(2))
+  end
+
   # 10110000
   defp bit8() do
     new(8) |> set(0) |> set(2) |> set(3)
